@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-class LugarMaps:
-    
+class PlaceMaps:
+
     def __init__(self):
         self.keyword = ''
         self.name = ''

@@ -11,20 +11,20 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from lugar_maps import LugarMaps
+from place_maps import PlaceMaps
 
 
 class GoogleMapsDataScraper:
 
-    def __init__(self, idioma, imgOutput):
+    def __init__(self, language, imgOutput):
         self.driver = None
         self.errorCont = 0
         self.imgOutput = imgOutput
-        self.configuracion = self.setConfiguracion(idioma)
+        self.configuracion = self.setConfiguracion(language)
 
-    def setConfiguracion(self, idioma):
+    def setConfiguracion(self, language):
         conf = {
-            'idioma': '--lang=es-ES',
+            'language': '--lang=es-ES',
             'textoEstrellas': 'estrellas',
             'textoReviews': 'reseñas',
             'textoDireccion': 'Dirección: ',
@@ -34,8 +34,8 @@ class GoogleMapsDataScraper:
             'textoHorario': 'Ocultar el horario de la semana',
             'remplazarHorario': [' Ocultar el horario de la semana', 'El horario podría cambiar', '; ']
         }
-        if (idioma == 'EN'):
-            conf['idioma'] = '--lang=en-GB'
+        if (language == 'EN'):
+            conf['language'] = '--lang=en-GB'
             conf['textoEstrellas'] = 'stars'
             conf['textoReviews'] = 'reviews'
             conf['textoDireccion'] = 'Address: '
@@ -55,7 +55,7 @@ class GoogleMapsDataScraper:
             chrome_options.add_argument('--no-sandbox')
             chrome_options.add_argument('--disable-dev-shm-usage')
             chrome_options.add_argument('--log-level=3')
-            chrome_options.add_argument(self.configuracion['idioma'])
+            chrome_options.add_argument(self.configuracion['language'])
             s = Service(ChromeDriverManager().install())
             self.driver = webdriver.Chrome(service=s, options=chrome_options)
             self.driver.get('https://www.google.com/')
@@ -70,10 +70,10 @@ class GoogleMapsDataScraper:
             print('Error with the Chrome Driver')
             return False
 
-    def scrapearDatos(self, kw):
+    def scraperDatas(self, kw):
         print("============scrapping datas from google map====================")
         try:
-            final_lugar = []
+            final_place = []
             if (self.errorCont == 5):
                 self.errorCont = 0
                 time.sleep(1)
@@ -95,7 +95,7 @@ class GoogleMapsDataScraper:
             inputBox.send_keys(Keys.ENTER)
             time.sleep(5)
             print("==========sent key-" + kw+" -to the search_box============")
-            lugar = LugarMaps()
+            place = PlaceMaps()
 
             try:
                 scrollable_div = self.driver.find_element(
@@ -151,79 +151,77 @@ class GoogleMapsDataScraper:
                 print("==========started scrapping an element===========" +
                       str(i+1) + "/" + str(count) + "===================")
 
-                lugar.keyword = kw
+                place.keyword = kw
                 try:
-                    lugar.name = self.driver.find_element(
+                    place.name = self.driver.find_element(
                         By.XPATH, '//div[@class="lMbq3e"]/div/h1/span[1]').text
                 except:
-                    lugar.name = 'Unkown name'
+                    place.name = 'Unkown name'
                 print("==========scrapped name===========" +
-                      lugar.name+"=================")
+                      place.name+"=================")
                 try:
-                    lugar.category = self.driver.find_element(
+                    place.category = self.driver.find_element(
                         By.XPATH, '//*[@jsaction="pane.rating.category"]').text
                 except:
-                    lugar.category = 'No given'
+                    place.category = 'No given'
                 print("==========scrapped category===========" +
-                      lugar.category+"=================")
+                      place.category+"=================")
                 try:
-                    lugar.direction = self.driver.find_element(
+                    place.direction = self.driver.find_element(
                         By.XPATH, '//*[contains(@aria-label, "Address: ")]').get_attribute("aria-label")
                 except:
-                    lugar.direction = ''
+                    place.direction = ''
                 print("==========scrapped direction===========" +
-                      lugar.direction+"=================")
+                      place.direction+"=================")
                 try:
-                    lugar.phone_number = self.driver.find_element(
+                    place.phone_number = self.driver.find_element(
                         By.XPATH, '//*[contains(@aria-label, "Phone: ")]').get_attribute("aria-label")
                 except:
-                    lugar.phone_number = ''
+                    place.phone_number = ''
                 print("==========scrapped phone_number===========" +
-                      lugar.phone_number+"=================")
+                      place.phone_number+"=================")
                 try:
-                    lugar.website = self.driver.find_element(
+                    place.website = self.driver.find_element(
                         By.XPATH, '//*[contains(@aria-label, "Website: ")]').get_attribute("aria-label")
                 except:
-                    lugar.website = ''
+                    place.website = ''
                 print("==========scrapped website===========" +
-                      lugar.website+"=================")
+                      place.website+"=================")
                 try:
-                    lugar.plus_code = self.driver.find_element(
+                    place.plus_code = self.driver.find_element(
                         By.XPATH, '//*[contains(@aria-label, "Plus code: ")]').get_attribute("aria-label")
                 except:
-                    lugar.plus_code = ''
+                    place.plus_code = ''
                 print("==========scrapped plus_code===========" +
-                      lugar.plus_code+"=================")
+                      place.plus_code+"=================")
                 try:
-                    lugar.open_hours = self.driver.find_element(
+                    place.open_hours = self.driver.find_element(
                         By.XPATH, '//*[contains(@aria-label, "Hide open hours for the week")]').get_attribute("aria-label")
                 except:
-                    lugar.open_hours = ''
+                    place.open_hours = ''
                 print("==========scrapped open_hours===========" +
-                      lugar.open_hours+"=================")
+                      place.open_hours+"=================")
                 try:
-                    lugar.stars = self.driver.find_element(
+                    place.stars = self.driver.find_element(
                         By.XPATH, '//*[@jsaction="pane.rating.moreReviews"]/span[1]/span/span[1]').text
                 except:
-                    lugar.stars = ''
+                    place.stars = ''
                 print("==========scrapped stars===========" +
-                      lugar.stars+"=================")
+                      place.stars+"=================")
                 try:
-                    lugar.reviews = self.driver.find_element(
+                    place.reviews = self.driver.find_element(
                         By.XPATH, '//*[@jsaction="pane.rating.moreReviews"]/span[2]/span/span[1]').text
                 except:
-                    lugar.reviews = 'No reviews'
+                    place.reviews = 'No reviews'
                 print("==========scrapped reviews===========" +
-                      lugar.reviews+"=================")
+                      place.reviews+"=================")
                 print("........................................................")
                 print('------------scrapped an element for ' +
                       kw + "---------------")
-                print(lugar)
-                final_lugar.append(lugar)
-                print(final_lugar)
+                final_place.append(place)
             print("============Completed scrapping for" +
                   kw + "====================")
-            return lugar
+            return final_place
         except Exception as e:
             print(e)
             self.errorCont += 1
