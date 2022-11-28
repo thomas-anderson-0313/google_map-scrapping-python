@@ -96,7 +96,30 @@ class GoogleMapsDataScraper:
             time.sleep(5)
             print("==========sent key-" + kw+" -to the search_box============")
             lugar = LugarMaps()
+
+            try:
+                scrollable_div = self.driver.find_element(
+                    By.XPATH, '//div[@class="lXJj5c Hk4XGb"]')
+
+                while scrollable_div:
+                    try:
+                        scrolled = self.driver.find_element(
+                            By.CLASS_NAME, 'HlvSq').text
+                        if scrolled == "You've reached the end of the list.":
+                            break
+                    except:
+                        print("Searching...")
+                        self.driver.execute_script(
+                            'document.getElementsByClassName("dS8AEf")[1].scrollTop = document.getElementsByClassName("dS8AEf")[1].scrollHeight',
+                            scrollable_div
+                        )
+                        time.sleep(3)
+            except:
+                print("Searched all available elements.")
+                pass
+
             elements = self.driver.find_elements(By.CLASS_NAME, 'Nv2PK')
+            time.sleep(5)
             count = len(elements)
             for i in range(count):
                 inputBox.clear()
@@ -106,7 +129,21 @@ class GoogleMapsDataScraper:
                 time.sleep(1)
                 inputBox.send_keys(Keys.ENTER)
                 time.sleep(5)
+                WebDriverWait(self.driver, 20).until(
+                    EC.element_to_be_clickable((By.CLASS_NAME, 'Nv2PK')))
                 elements = self.driver.find_elements(By.CLASS_NAME, 'Nv2PK')
+                if len(elements) < i+1:
+                    while len(elements) < i+1:
+                        scrollable_div = self.driver.find_element(
+                            By.XPATH, '//div[@class="lXJj5c Hk4XGb"]')
+                        self.driver.execute_script(
+                            'document.getElementsByClassName("dS8AEf")[1].scrollTop = document.getElementsByClassName("dS8AEf")[1].scrollHeight',
+                            scrollable_div
+                        )
+                        time.sleep(3)
+                        scrolled_elements = self.driver.find_elements(
+                            By.CLASS_NAME, 'Nv2PK')
+                        elements = scrolled_elements
                 data = elements[i]
                 data.click()
                 print("==========opened new element===========")
@@ -115,40 +152,67 @@ class GoogleMapsDataScraper:
                       str(i+1) + "/" + str(count) + "===================")
 
                 lugar.keyword = kw
-                lugar.name = self.driver.find_element(
-                    By.XPATH, '//div[@class="lMbq3e"]/div/h1/span[1]').text
+                try:
+                    lugar.name = self.driver.find_element(
+                        By.XPATH, '//div[@class="lMbq3e"]/div/h1/span[1]').text
+                except:
+                    lugar.name = 'Unkown name'
                 print("==========scrapped name===========" +
                       lugar.name+"=================")
-                lugar.category = self.driver.find_element(
-                    By.XPATH, '//*[@jsaction="pane.rating.category"]').text
+                try:
+                    lugar.category = self.driver.find_element(
+                        By.XPATH, '//*[@jsaction="pane.rating.category"]').text
+                except:
+                    lugar.category = 'No given'
                 print("==========scrapped category===========" +
                       lugar.category+"=================")
-                lugar.direction = self.driver.find_element(
-                    By.XPATH, '//*[contains(@aria-label, "Address: ")]').get_attribute("aria-label")
+                try:
+                    lugar.direction = self.driver.find_element(
+                        By.XPATH, '//*[contains(@aria-label, "Address: ")]').get_attribute("aria-label")
+                except:
+                    lugar.direction = ''
                 print("==========scrapped direction===========" +
                       lugar.direction+"=================")
-                lugar.phone_number = self.driver.find_element(
-                    By.XPATH, '//*[contains(@aria-label, "Phone: ")]').get_attribute("aria-label")
+                try:
+                    lugar.phone_number = self.driver.find_element(
+                        By.XPATH, '//*[contains(@aria-label, "Phone: ")]').get_attribute("aria-label")
+                except:
+                    lugar.phone_number = ''
                 print("==========scrapped phone_number===========" +
                       lugar.phone_number+"=================")
-                lugar.website = self.driver.find_element(
-                    By.XPATH, '//*[contains(@aria-label, "Website: ")]').get_attribute("aria-label")
+                try:
+                    lugar.website = self.driver.find_element(
+                        By.XPATH, '//*[contains(@aria-label, "Website: ")]').get_attribute("aria-label")
+                except:
+                    lugar.website = ''
                 print("==========scrapped website===========" +
                       lugar.website+"=================")
-                lugar.plus_code = self.driver.find_element(
-                    By.XPATH, '//*[contains(@aria-label, "Plus code: ")]').get_attribute("aria-label")
+                try:
+                    lugar.plus_code = self.driver.find_element(
+                        By.XPATH, '//*[contains(@aria-label, "Plus code: ")]').get_attribute("aria-label")
+                except:
+                    lugar.plus_code = ''
                 print("==========scrapped plus_code===========" +
                       lugar.plus_code+"=================")
-                lugar.open_hours = self.driver.find_element(
-                    By.XPATH, '//*[contains(@aria-label, "Hide open hours for the week")]').get_attribute("aria-label")
+                try:
+                    lugar.open_hours = self.driver.find_element(
+                        By.XPATH, '//*[contains(@aria-label, "Hide open hours for the week")]').get_attribute("aria-label")
+                except:
+                    lugar.open_hours = ''
                 print("==========scrapped open_hours===========" +
                       lugar.open_hours+"=================")
-                lugar.stars = self.driver.find_element(
-                    By.XPATH, '//*[@jsaction="pane.rating.moreReviews"]/span[1]/span/span[1]').text
+                try:
+                    lugar.stars = self.driver.find_element(
+                        By.XPATH, '//*[@jsaction="pane.rating.moreReviews"]/span[1]/span/span[1]').text
+                except:
+                    lugar.stars = ''
                 print("==========scrapped stars===========" +
                       lugar.stars+"=================")
-                lugar.reviews = self.driver.find_element(
-                    By.XPATH, '//*[@jsaction="pane.rating.moreReviews"]/span[2]/span/span[1]').text
+                try:
+                    lugar.reviews = self.driver.find_element(
+                        By.XPATH, '//*[@jsaction="pane.rating.moreReviews"]/span[2]/span/span[1]').text
+                except:
+                    lugar.reviews = 'No reviews'
                 print("==========scrapped reviews===========" +
                       lugar.reviews+"=================")
                 print("........................................................")
