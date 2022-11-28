@@ -13,6 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from lugar_maps import LugarMaps
 
+
 class GoogleMapsDataScraper:
 
     def __init__(self, idioma, imgOutput):
@@ -20,7 +21,7 @@ class GoogleMapsDataScraper:
         self.errorCont = 0
         self.imgOutput = imgOutput
         self.configuracion = self.setConfiguracion(idioma)
-    
+
     def setConfiguracion(self, idioma):
         conf = {
             'idioma': '--lang=es-ES',
@@ -33,7 +34,7 @@ class GoogleMapsDataScraper:
             'textoHorario': 'Ocultar el horario de la semana',
             'remplazarHorario': [' Ocultar el horario de la semana', 'El horario podría cambiar', '; ']
         }
-        if(idioma == 'EN'):
+        if (idioma == 'EN'):
             conf['idioma'] = '--lang=en-GB'
             conf['textoEstrellas'] = 'stars'
             conf['textoReviews'] = 'reviews'
@@ -42,10 +43,11 @@ class GoogleMapsDataScraper:
             conf['textoTelefono'] = 'Phone: '
             conf['textoPlusCode'] = 'Plus code: '
             conf['textoHorario'] = 'Hide open hours for the week'
-            conf['remplazarHorario'] = ['. Hide open hours for the week', 'Hours might differ', '; ']
-        
+            conf['remplazarHorario'] = [
+                '. Hide open hours for the week', 'Hours might differ', '; ']
+
         return conf
-    
+
     def initDriver(self):
         try:
             chrome_options = webdriver.ChromeOptions()
@@ -54,7 +56,7 @@ class GoogleMapsDataScraper:
             chrome_options.add_argument('--disable-dev-shm-usage')
             chrome_options.add_argument('--log-level=3')
             chrome_options.add_argument(self.configuracion['idioma'])
-            s=Service(ChromeDriverManager().install())
+            s = Service(ChromeDriverManager().install())
             self.driver = webdriver.Chrome(service=s, options=chrome_options)
             self.driver.get('https://www.google.com/')
             try:
@@ -67,126 +69,101 @@ class GoogleMapsDataScraper:
         except:
             print('Error with the Chrome Driver')
             return False
-    
-    def quitarTildes(self, s):
-        replacements = (("á", "a"), ("é", "e"), ("í", "i"), ("ó", "o"), ("ú", "u"),)
-        for a, b in replacements:
-            s = s.replace(a, b).replace(a.upper(), b.upper())
-        return s
-    
+
     def scrapearDatos(self, kw):
+        print("============scrapping datas from google map====================")
         try:
-            lugar = LugarMaps()
-            lugar.keyword = kw
-            if(self.errorCont == 5):
+            final_lugar = []
+            if (self.errorCont == 5):
                 self.errorCont = 0
                 time.sleep(1)
                 self.driver.get('https://www.google.com/maps/')
                 time.sleep(2)
-            time.sleep(random.randint(1,3))
-            inputBox = WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="searchboxinput"]')))
+            time.sleep(random.randint(1, 3))
+            inputBox = WebDriverWait(self.driver, 20).until(
+                EC.element_to_be_clickable((By.XPATH, '//input[@id="searchboxinput"]')))
+            print("==========tracked search_box============")
             inputBox.click()
             inputBox.clear()
+            print("==========cleared search_box============")
             inputBox.click()
             time.sleep(1)
+            print("==========sending key-" + kw +
+                  " -to the search_box============")
             inputBox.send_keys(kw)
             time.sleep(1)
             inputBox.send_keys(Keys.ENTER)
-            time.sleep(4)
-                        
-            if(self.isLoaded(kw) == False):
-                return None
-            
-            divImg = self.driver.find_element(By.XPATH, '//*[@id="pane"]/following-sibling::div')
-            titulo = divImg.find_element(By.TAG_NAME, 'h1').text
-            lugar.nombre = titulo
-            time.sleep(1)
-            try:
-                val = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[contains(@aria-label, "'+self.configuracion['textoEstrellas']+'")]')))
-                if '(' in val.text and ')' in val.text:
-                    dividido = val.text.replace(')','').split('(')
-                    estrellas = dividido[0]
-                    numResenas = dividido[1]
-                else:
-                    valoraciones = val.get_attribute("aria-label")
-                    estrellas = valoraciones.replace(self.configuracion['textoEstrellas'],'').replace(' ','')
-                
-                    val = self.driver.find_element(By.XPATH, '//*[contains(@aria-label, "'+self.configuracion['textoReviews']+'")]')
-                    valoraciones = val.get_attribute("aria-label")            
-                    numResenas = valoraciones.replace(self.configuracion['textoReviews'],'').replace(' ','')
-                
-                lugar.estrellas = self.checkValoraciones(estrellas)
-                lugar.resenas = self.checkValoraciones(numResenas)
-            except Exception as e:
-                print(e)
-                pass
-            
-            try:
-                imgSrc = divImg.find_element(By.XPATH, '//img[@decoding="async"]').get_attribute("src")
-                #imgSrc = divImg.find_element(By.TAG_NAME, 'img').get_attribute("src")
-                if not 'gstatic' in imgSrc or not 'streetviewpixels' in imgSrc :
-                    urllib.request.urlretrieve(imgSrc, self.imgOutput+self.quitarTildes(kw.replace('º','').replace('.','').replace(' ','-').replace('/','-')).lower()+'.jpg')
-            except Exception as e:
-                print(e)
-                print('Could not get image')
-                pass
-            
-            lugar.categoria = self.buscar_xpath('//*[@jsaction="pane.rating.category"]')
-            lugar.direccion = self.buscar_xpath('//*[contains(@aria-label, "'+self.configuracion['textoDireccion']+'")]')
-            lugar.web = self.buscar_xpath('//*[contains(@aria-label, "'+self.configuracion['textoWeb']+'")]')
-            lugar.telefono = self.buscar_xpath('//*[contains(@aria-label, "'+self.configuracion['textoTelefono']+'")]')
-            lugar.pluscode = self.buscar_xpath('//*[contains(@aria-label, "'+self.configuracion['textoPlusCode']+'")]')
-            
-            lugar.horario = self.getHorario()
-            
+            time.sleep(5)
+            print("==========sent key-" + kw+" -to the search_box============")
+            lugar = LugarMaps()
+            elements = self.driver.find_elements(By.CLASS_NAME, 'Nv2PK')
+            count = len(elements)
+            for i in range(count):
+                inputBox.clear()
+                inputBox.click()
+                time.sleep(1)
+                inputBox.send_keys(kw)
+                time.sleep(1)
+                inputBox.send_keys(Keys.ENTER)
+                time.sleep(5)
+                elements = self.driver.find_elements(By.CLASS_NAME, 'Nv2PK')
+                data = elements[i]
+                data.click()
+                print("==========opened new element===========")
+                time.sleep(5)
+                print("==========started scrapping an element===========" +
+                      str(i+1) + "/" + str(count) + "===================")
+
+                lugar.keyword = kw
+                lugar.name = self.driver.find_element(
+                    By.XPATH, '//div[@class="lMbq3e"]/div/h1/span[1]').text
+                print("==========scrapped name===========" +
+                      lugar.name+"=================")
+                lugar.category = self.driver.find_element(
+                    By.XPATH, '//*[@jsaction="pane.rating.category"]').text
+                print("==========scrapped category===========" +
+                      lugar.category+"=================")
+                lugar.direction = self.driver.find_element(
+                    By.XPATH, '//*[contains(@aria-label, "Address: ")]').get_attribute("aria-label")
+                print("==========scrapped direction===========" +
+                      lugar.direction+"=================")
+                lugar.phone_number = self.driver.find_element(
+                    By.XPATH, '//*[contains(@aria-label, "Phone: ")]').get_attribute("aria-label")
+                print("==========scrapped phone_number===========" +
+                      lugar.phone_number+"=================")
+                lugar.website = self.driver.find_element(
+                    By.XPATH, '//*[contains(@aria-label, "Website: ")]').get_attribute("aria-label")
+                print("==========scrapped website===========" +
+                      lugar.website+"=================")
+                lugar.plus_code = self.driver.find_element(
+                    By.XPATH, '//*[contains(@aria-label, "Plus code: ")]').get_attribute("aria-label")
+                print("==========scrapped plus_code===========" +
+                      lugar.plus_code+"=================")
+                lugar.open_hours = self.driver.find_element(
+                    By.XPATH, '//*[contains(@aria-label, "Hide open hours for the week")]').get_attribute("aria-label")
+                print("==========scrapped open_hours===========" +
+                      lugar.open_hours+"=================")
+                lugar.stars = self.driver.find_element(
+                    By.XPATH, '//*[@jsaction="pane.rating.moreReviews"]/span[1]/span/span[1]').text
+                print("==========scrapped stars===========" +
+                      lugar.stars+"=================")
+                lugar.reviews = self.driver.find_element(
+                    By.XPATH, '//*[@jsaction="pane.rating.moreReviews"]/span[2]/span/span[1]').text
+                print("==========scrapped reviews===========" +
+                      lugar.reviews+"=================")
+                print("........................................................")
+                print('------------scrapped an element for ' +
+                      kw + "---------------")
+                print(lugar)
+                final_lugar.append(lugar)
+                print(final_lugar)
+            print("============Completed scrapping for" +
+                  kw + "====================")
             return lugar
         except Exception as e:
             print(e)
             self.errorCont += 1
             return None
-    
-    def buscar_xpath(self, xpath):
-        try:
-            resultado = self.driver.find_element(By.XPATH, xpath).text
-            return resultado
-        except:
-            return ''
-    
-    def getHorario(self):
-        try:
-            horario = self.driver.find_element(By.XPATH, '//*[contains(@aria-label, "'+self.configuracion['textoHorario']+'")]').get_attribute('aria-label')
-            horario = horario.replace(self.configuracion['remplazarHorario'][0], '')
-            horario = horario.replace(self.configuracion['remplazarHorario'][1], '')
-            horario = horario.replace(self.configuracion['remplazarHorario'][2], '\n')
-            return horario
-        except:
-            return ''
-    
-    def isLoaded(self, kw):
-        #divImg = self.driver.find_element_by_id('pane')
-        divImg = self.driver.find_element(By.XPATH, '//*[@id="pane"]/following-sibling::div')
-        titulo = divImg.find_elements(By.TAG_NAME, 'h1')
-        vacio = True
-        for a in titulo:
-            if(a.text != ''):
-                return True
-        if(vacio):
-            try:
-                resultados = self.driver.find_element(By.XPATH, '//div[contains(@aria-label, "'+kw+'")]')
-                enlace = resultados.find_element(By.TAG_NAME, 'a')
-                enlace.click()
-                time.sleep(3)
-                return True
-            except:
-                pass
-        return False
-    
-    def checkValoraciones(self, val):
-        if(self.configuracion['textoEstrellas'] in val or self.configuracion['textoReviews'] in val):
-            return ''
-        else:
-            return val
-        
-    
+
     def endDriver(self):
         self.driver.quit()
