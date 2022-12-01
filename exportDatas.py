@@ -5,9 +5,9 @@ import xlwt
 
 class ExportDataMaps:
 
-    def __init__(self, nombrefile, ruta, listPlaces):
-        self.nombrefile = nombrefile
-        self.ruta = ruta
+    def __init__(self, filname, router, listPlaces):
+        self.filname = filname
+        self.router = router
         self.listPlaces = listPlaces
 
     # def write_to_xlsx(data):
@@ -25,10 +25,10 @@ class ExportDataMaps:
         sheet.write(0, 1, 'NAME')
         sheet.write(0, 2, 'CATEGORY')
         sheet.write(0, 3, 'DIRECTION')
-        sheet.write(0, 4, 'PHONE_NUMBER')
+        sheet.write(0, 4, 'PHONE NUMBER')
         sheet.write(0, 5, 'WEBSITE')
-        sheet.write(0, 6, 'PLUS_CODE')
-        sheet.write(0, 7, 'OPEN_HOURS')
+        sheet.write(0, 6, 'PLUS CODE')
+        sheet.write(0, 7, 'OPEN HOURS')
         sheet.write(0, 8, 'STARS')
         sheet.write(0, 9, 'REVIEWS')
 
@@ -46,4 +46,4 @@ class ExportDataMaps:
             sheet.write(cont, 9, place.reviews)
             cont = cont + 1
 
-        writeBook.save(self.ruta+self.nombrefile)
+        writeBook.save(self.router+self.filname)

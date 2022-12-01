@@ -25,7 +25,7 @@ def scrapearMaps(language, list, outputFolder, results, thread):
         if (place != None):
             print('Output nº '+str(thread)+' ' + str(cont) +
                   '/' + str(len(list)) + ' - OK - ' + l)
-            listPlaces.append(place)
+            listPlaces = place
         else:
             print('Output nº '+str(thread)+' ' + str(cont) +
                   '/' + str(len(list)) + ' - ERROR - ' + l)
